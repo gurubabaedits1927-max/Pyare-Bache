@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pyare Bache</title>
+  <style>
+    body { margin:0; background:#0b1020; overflow:hidden; color:#fff; font-family:sans-serif;}
+    #gameTitle{
+      text-align:center;
+      margin:10px 0;
+      color:#f472b6;
+      font-family: 'Comic Sans MS', cursive;
+      letter-spacing:1px;
+    }
+    #player { position:absolute; bottom:20px; left:50%; width:60px; height:20px; background:#4ade80; }
+    .star { position:absolute; top:-20px; width:20px; height:20px; background:#facc15; border-radius:50%; }
+    #score { position:fixed; top:10px; left:10px; }
+  </style>
+</head>
+<body>
+  <h1 id="gameTitle">Pyare Bache</h1>
+  <div id="score">Score: 0 | High: 0</div>
+  <div id="player"></div>
+
+<script>
+let player = document.getElementById("player");
+let scoreEl = document.getElementById("score");
+let score = 0;
+let highScore = localStorage.getItem("highScore") || 0;
+scoreEl.innerText = `Score: ${score} | High: ${highScore}`;
+
+let px = window.innerWidth/2;
+
+function move(x){
+  px = x - 30;
+  px = Math.max(0, Math.min(window.innerWidth-60, px));
+  player.style.left = px+"px";
+}
+
+// Touch + Mouse support
+document.addEventListener("touchstart", e=> move(e.touches[0].clientX));
+document.addEventListener("mousemove", e=> { if(e.buttons) move(e.clientX); });
+
+let fallSpeed = 5;
+let spawnRate = 1200;
+
+function dropStar(){
+  let s = document.createElement("div");
+  s.className="star";
+  s.style.left = Math.random()*(window.innerWidth-20)+"px";
+  document.body.appendChild(s);
+  let y = -20;
+
+  let fall = setInterval(()=>{
+    y += fallSpeed; s.style.top = y+"px";
+    let rS = s.getBoundingClientRect();
+    let rP = player.getBoundingClientRect();
+
+    if(rS.bottom>=rP.top && rS.left<rP.right && rS.right>rP.left){
+      score += 10;
+      if(score > highScore){
+        highScore = score;
+        localStorage.setItem("highScore", highScore);
+      }
+      scoreEl.innerText = `Score: ${score} | High: ${highScore}`;
+      s.remove(); clearInterval(fall);
+
+      // Difficulty scaling
+      if(score % 50 === 0){
+        fallSpeed += 1;
+        spawnRate = Math.max(600, spawnRate - 100);
+        resetSpawner();
+      }
+    }
+
+    if(y > window.innerHeight){
+      alert(`Pyare Bache 🧸\nScore: ${score}\nHigh: ${highScore}`);
+      location.reload();
+    }
+  },30);
+}
+
+let spawner;
+function resetSpawner(){
+  clearInterval(spawner);
+  spawner = setInterval(dropStar, spawnRate);
+}
+resetSpawner();
+</script>
+</body>
+</html>
